@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>每日待办 · 日历同步版</title>
+  <style>
+    :root {
+      --work: #6366f1;
+      --work-2: #38bdf8;
+      --life: #f472b6;
+      --life-2: #fb923c;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #1e293b;
+      --text-2: #64748b;
+      --border: #e2e8f0;
+      --radius-xl: 28px;
+      --radius-lg: 18px;
+      --radius-md: 12px;
+      --shadow: 0 24px 60px rgba(15, 23, 42, 0.08);
+      --shadow-hover: 0 30px 70px rgba(15, 23, 42, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body { padding: 40px 24px; }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    /* 顶部日期区 */
+    .date-bar {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 34px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .date-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      background: #fff;
+      color: var(--text-2);
+      cursor: pointer;
+      font-size: 18px;
+      display: grid;
+      place-items: center;
+      transition: all 0.15s;
+    }
+
+    .icon-btn:hover {
+      border-color: #cbd5e1;
+      color: var(--text);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+    }
+
+    .date-day {
+      font-size: 72px;
+      font-weight: 800;
+      line-height: 0.85;
+      letter-spacing: -3px;
+      background: linear-gradient(135deg, #6366f1, #f472b6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      cursor: pointer;
+    }
+
+    .date-right {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .date-week {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .date-ym {
+      font-size: 15px;
+      color: var(--text-2);
+      font-weight: 500;
+    }
+
+    .date-quote {
+      font-size: 14px;
+      color: var(--text-2);
+      background: rgba(255,255,255,0.8);
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      max-width: 320px;
+      text-align: right;
+    }
+
+    /* 双栏 */
+    .board {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 760px) {
+      .board { grid-template-columns: 1fr; }
+      .date-bar { flex-direction: column; align-items: flex-start; }
+      .date-quote { text-align: left; max-width: 100%; }
+      .date-day { font-size: 56px; }
+    }
+
+    .column {
+      background: var(--card);
+      border-radius: var(--radius-xl);
+      padding: 28px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      min-height: 520px;
+      transition: box-shadow 0.3s, transform 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .column::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+    }
+
+    .column.work::before { background: linear-gradient(90deg, var(--work), var(--work-2)); }
+    .column.life::before { background: linear-gradient(90deg, var(--life), var(--life-2)); }
+
+    .column:hover {
+      box-shadow: var(--shadow-hover);
+      transform: translateY(-2px);
+    }
+
+    .col-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .col-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .col-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+    }
+
+    .work .col-icon { background: linear-gradient(135deg, #eef2ff, #e0f2fe); }
+    .life .col-icon { background: linear-gradient(135deg, #fdf2f8, #fff7ed); }
+
+    .col-title {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .col-title small {
+      display: block;
+      font-size: 13px;
+      color: var(--text-2);
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .progress-ring {
+      position: relative;
+      width: 48px;
+      height: 48px;
+    }
+
+    .progress-ring svg { transform: rotate(-90deg); }
+
+    .progress-ring circle {
+      fill: none;
+      stroke-width: 5;
+      stroke-linecap: round;
+    }
+
+    .progress-ring .bg { stroke: #f1f5f9; }
+    .work .progress-ring .fill { stroke: url(#grad-work); }
+    .life .progress-ring .fill { stroke: url(#grad-life); }
+
+    .progress-text {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-2);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .input-row input {
+      flex: 1;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      background: #fafafa;
+    }
+
+    .input-row input::placeholder { color: #94a3b8; }
+
+    .work .input-row input:focus {
+      border-color: var(--work);
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.12);
+      background: #fff;
+    }
+
+    .life .input-row input:focus {
+      border-color: var(--life);
+      box-shadow: 0 0 0 4px rgba(244,114,182,0.12);
+      background: #fff;
+    }
+
+    .btn-add {
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 0 22px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-add:active { transform: scale(0.96); }
+    .work .btn-add { background: linear-gradient(135deg, var(--work), var(--work-2)); }
+    .life .btn-add { background: linear-gradient(135deg, var(--life), var(--life-2)); }
+
+    .list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      flex: 1;
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 14px 14px 16px;
+      margin-bottom: 10px;
+      cursor: grab;
+      transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
+    }
+
+    .item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(15,23,42,0.06);
+      border-color: #cbd5e1;
+    }
+
+    .item.dragging {
+      opacity: 0.4;
+      border-style: dashed;
+    }
+
+    .item.over {
+      border-color: #a78bfa;
+      background: #faf5ff;
+    }
+
+    .handle {
+      color: #cbd5e1;
+      cursor: grab;
+      font-size: 14px;
+      line-height: 1;
+      user-select: none;
+      letter-spacing: 1px;
+    }
+
+    .checkbox {
+      width: 24px;
+      height: 24px;
+      border: 2px solid #cbd5e1;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .work .item.done .checkbox {
+      background: linear-gradient(135deg, var(--work), var(--work-2));
+      border-color: transparent;
+    }
+
+    .life .item.done .checkbox {
+      background: linear-gradient(135deg, var(--life), var(--life-2));
+      border-color: transparent;
+    }
+
+    .checkbox svg {
+      width: 12px;
+      height: 12px;
+      stroke: #fff;
+      stroke-width: 3;
+      fill: none;
+      stroke-dasharray: 18;
+      stroke-dashoffset: 18;
+      transition: stroke-dashoffset 0.25s;
+    }
+
+    .item.done .checkbox svg { stroke-dashoffset: 0; }
+
+    .text {
+      flex: 1;
+      font-size: 15px;
+      line-height: 1.5;
+      word-break: break-word;
+      outline: none;
+      border-bottom: 1px dashed transparent;
+      padding: 2px 0;
+      color: var(--text);
+    }
+
+    .text:focus { border-bottom-color: #cbd5e1; }
+
+    .item.done .text {
+      text-decoration: line-through;
+      color: var(--text-2);
+    }
+
+    .btn-del {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      display: grid;
+      place-items: center;
+      opacity: 0;
+      transition: opacity 0.15s, background 0.15s, color 0.15s;
+    }
+
+    .item:hover .btn-del { opacity: 1; }
+    .btn-del:hover { background: #fee2e2; color: #ef4444; }
+
+    .empty {
+      text-align: center;
+      color: var(--text-2);
+      padding: 60px 20px;
+      font-size: 14px;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 16px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 28px;
+    }
+
+    .work .empty-icon { background: linear-gradient(135deg, #eef2ff, #e0f2fe); }
+    .life .empty-icon { background: linear-gradient(135deg, #fdf2f8, #fff7ed); }
+
+    footer {
+      margin-top: 34px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .footer-btn {
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-2);
+      background: #fff;
+      transition: transform 0.15s, box-shadow 0.15s, color 0.15s;
+    }
+
+    .footer-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(15,23,42,0.06);
+      color: var(--text);
+    }
+
+    .footer-btn.primary {
+      color: #fff;
+      border-color: transparent;
+      background: linear-gradient(135deg, #6366f1, #f472b6);
+    }
+
+    .notice {
+      font-size: 12px;
+      color: var(--text-2);
+    }
+
+    .sync-status {
+      font-size: 12px;
+      color: var(--text-2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #cbd5e1;
+    }
+
+    .sync-dot.ok { background: #22c55e; }
+    .sync-dot.err { background: #ef4444; }
+    .sync-dot.syncing { background: #f59e0b; animation: pulse 1s infinite; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1e293b;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 999px;
+      font-size: 14px;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 300;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes pop {
+      0% { transform: scale(1); }
+      40% { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+
+    .item.done { animation: pop 0.25s ease; }
+
+    /* 弹窗 */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.2s;
+      padding: 20px;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal {
+      background: var(--card);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow: auto;
+      box-shadow: var(--shadow-hover);
+      transform: translateY(10px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.show .modal { transform: translateY(0); }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: #f1f5f9;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-2);
+      display: grid;
+      place-items: center;
+    }
+
+    .modal-close:hover { background: #e2e8f0; color: var(--text); }
+
+    /* 日历 */
+    .cal-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .cal-month {
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+
+    .cal-weekday {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-2);
+      font-weight: 600;
+      padding: 8px 0;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: var(--radius-md);
+      background: #f8fafc;
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      position: relative;
+      transition: all 0.15s;
+    }
+
+    .cal-day:hover { background: #eef2ff; }
+
+    .cal-day.other { color: #cbd5e1; background: transparent; }
+
+    .cal-day.today {
+      font-weight: 800;
+      box-shadow: inset 0 0 0 2px #6366f1;
+    }
+
+    .cal-day.selected {
+      background: linear-gradient(135deg, #6366f1, #f472b6);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .cal-day.has-data::after {
+      content: "";
+      position: absolute;
+      bottom: 5px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: 0.7;
+    }
+
+    /* 设置表单 */
+    .form-group {
+      margin-bottom: 16px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    }
+
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-2);
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .modal-actions .footer-btn { flex: 1; }
+  </style>
+</head>
+<body>
+  <svg width="0" height="0" style="position:absolute;">
+    <defs>
+      <linearGradient id="grad-work" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#6366f1" />
+        <stop offset="100%" stop-color="#38bdf8" />
+      </linearGradient>
+      <linearGradient id="grad-life" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#f472b6" />
+        <stop offset="100%" stop-color="#fb923c" />
+      </linearGradient>
+    </defs>
+  </svg>
+
+  <div class="wrap">
+    <header class="date-bar">
+      <div class="date-main">
+        <button class="icon-btn" id="btn-prev" title="上一天">‹</button>
+        <div class="date-day" id="date-day">--</div>
+        <div class="date-right">
+          <div class="date-week" id="date-week">--</div>
+          <div class="date-ym" id="date-ym">----/--</div>
+        </div>
+        <button class="icon-btn" id="btn-next" title="下一天">›</button>
+        <button class="icon-btn" id="btn-calendar" title="日历">📅</button>
+        <button class="icon-btn" id="btn-today" title="今天">⌂</button>
+      </div>
+      <div class="date-quote" id="date-quote">今天也是值得期待的一天 ✨</div>
+    </header>
+
+    <main class="board">
+      <section class="column work" data-type="work">
+        <div class="col-header">
+          <div class="col-title-wrap">
+            <div class="col-icon">💼</div>
+            <h2 class="col-title">工作<small>Focus & execute</small></h2>
+          </div>
+          <div class="progress-ring">
+            <svg width="48" height="48" viewBox="0 0 48 48">
+              <circle class="bg" cx="24" cy="24" r="20"></circle>
+              <circle class="fill" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="125.6" id="ring-work"></circle>
+            </svg>
+            <div class="progress-text" id="text-work">0%</div>
+          </div>
+        </div>
+        <div class="input-row">
+          <input type="text" placeholder="输入工作待办，按回车添加…" />
+          <button class="btn-add">添加</button>
+        </div>
+        <ul class="list"></ul>
+      </section>
+
+      <section class="column life" data-type="life">
+        <div class="col-header">
+          <div class="col-title-wrap">
+            <div class="col-icon">🌸</div>
+            <h2 class="col-title">生活<small>Balance & enjoy</small></h2>
+          </div>
+          <div class="progress-ring">
+            <svg width="48" height="48" viewBox="0 0 48 48">
+              <circle class="bg" cx="24" cy="24" r="20"></circle>
+              <circle class="fill" cx="24" cy="24" r="20" stroke-dasharray="125.6" stroke-dashoffset="125.6" id="ring-life"></circle>
+            </svg>
+            <div class="progress-text" id="text-life">0%</div>
+          </div>
+        </div>
+        <div class="input-row">
+          <input type="text" placeholder="输入生活待办，按回车添加…" />
+          <button class="btn-add">添加</button>
+        </div>
+        <ul class="list"></ul>
+      </section>
+    </main>
+
+    <footer>
+      <div class="footer-actions">
+        <button class="footer-btn" id="btn-export">📦 导出备份</button>
+        <button class="footer-btn" id="btn-import">📥 导入备份</button>
+        <button class="footer-btn" id="btn-clear">🗑️ 清空当日</button>
+        <button class="footer-btn" id="btn-settings">⚙️ 同步设置</button>
+        <button class="footer-btn primary" id="btn-sync">☁️ 立即同步</button>
+      </div>
+      <input type="file" id="file-input" accept=".json" style="display:none" />
+      <div class="sync-status" id="sync-status">
+        <span class="sync-dot" id="sync-dot"></span>
+        <span id="sync-text">本地模式</span>
+      </div>
+      <div class="notice">数据优先保存在浏览器本地；配置 GitHub 后可跨设备同步。Token 只存在你的浏览器里，不会写入文件。</div>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <!-- 日历弹窗 -->
+  <div class="modal-overlay" id="calendar-overlay">
+    <div class="modal" style="max-width: 360px;">
+      <div class="modal-header">
+        <h3 class="modal-title">选择日期</h3>
+        <button class="modal-close" data-close="calendar">×</button>
+      </div>
+      <div class="cal-nav">
+        <button class="icon-btn" id="cal-prev">‹</button>
+        <div class="cal-month" id="cal-month">----年--月</div>
+        <button class="icon-btn" id="cal-next">›</button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+  </div>
+
+  <!-- 设置弹窗 -->
+  <div class="modal-overlay" id="settings-overlay">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">GitHub 同步设置</h3>
+        <button class="modal-close" data-close="settings">×</button>
+      </div>
+      <div class="form-group">
+        <label>GitHub Token（PAT）</label>
+        <input type="password" id="set-pat" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" />
+        <div class="form-hint">只在你的浏览器保存，用于读写仓库里的同步文件。</div>
+      </div>
+      <div class="form-group">
+        <label>仓库所有者</label>
+        <input type="text" id="set-owner" placeholder="你的 GitHub 用户名" />
+      </div>
+      <div class="form-group">
+        <label>仓库名</label>
+        <input type="text" id="set-repo" placeholder="例如 my-daily-todo" />
+      </div>
+      <div class="form-group">
+        <label>文件路径</label>
+        <input type="text" id="set-path" value="todo-data.json" />
+        <div class="form-hint">同步数据会保存为这个文件，不存在会自动创建。</div>
+      </div>
+      <div class="form-group">
+        <label>分支</label>
+        <input type="text" id="set-branch" value="main" />
+      </div>
+      <div class="modal-actions">
+        <button class="footer-btn" id="btn-test">🔗 测试连接</button>
+        <button class="footer-btn" id="btn-save-settings">💾 保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const OLD_KEY = 'daily-todo-dopamine-v2';
+    const DATA_KEY = 'daily-todo-calendar-v1';
+    const SETTINGS_KEY = 'daily-todo-settings-v1';
+    const SYNC_META_KEY = 'daily-todo-sync-meta-v1';
+
+    let storageAvailable = false;
+    try {
+      localStorage.setItem('__test__', '1');
+      localStorage.removeItem('__test__');
+      storageAvailable = true;
+    } catch (e) {
+      storageAvailable = false;
+      showToast('当前环境无法自动保存，请在浏览器中打开此文件');
+    }
+
+    let allData = {};
+    let currentDate = formatDate(new Date());
+    let settings = { pat: '', owner: '', repo: '', path: 'todo-data.json', branch: 'main' };
+    let syncMeta = { lastSync: 0, status: 'idle', message: '' };
+    let syncTimer = null;
+
+    const quotes = [
+      '今天也是值得期待的一天 ✨',
+      '把大目标拆成小行动 🚀',
+      '慢慢来，比较快 🐢',
+      '先完成，再完美 ✅',
+      '保持热爱，奔赴山海 🌊'
+    ];
+
+    function formatDate(d) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function parseDate(str) {
+      const [y, m, d] = str.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+    }
+
+    function escapeHtml(text) {
+      return text.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2200);
+    }
+
+    function saveAll() {
+      if (!storageAvailable) return;
+      try {
+        localStorage.setItem(DATA_KEY, JSON.stringify(allData));
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        localStorage.setItem(SYNC_META_KEY, JSON.stringify(syncMeta));
+      } catch (e) {
+        showToast('保存失败，建议立即导出备份');
+      }
+    }
+
+    function loadAll() {
+      if (!storageAvailable) return;
+      try {
+        const raw = localStorage.getItem(DATA_KEY);
+        if (raw) {
+          allData = JSON.parse(raw);
+        } else {
+          const oldRaw = localStorage.getItem(OLD_KEY);
+          if (oldRaw) {
+            const old = JSON.parse(oldRaw);
+            const today = formatDate(new Date());
+            allData = {};
+            allData[today] = { work: old.work || [], life: old.life || [], _meta: { updated: Date.now() } };
+            localStorage.setItem(DATA_KEY, JSON.stringify(allData));
+            showToast('历史数据已迁移到日历版');
+          }
+        }
+        const s = localStorage.getItem(SETTINGS_KEY);
+        if (s) settings = Object.assign(settings, JSON.parse(s));
+        const m = localStorage.getItem(SYNC_META_KEY);
+        if (m) syncMeta = Object.assign(syncMeta, JSON.parse(m));
+      } catch (e) {
+        console.error('读取失败', e);
+      }
+    }
+
+    function getDay(date) {
+      if (!allData[date]) {
+        allData[date] = { work: [], life: [], _meta: { updated: Date.now() } };
+      }
+      return allData[date];
+    }
+
+    function touchDay(date) {
+      const day = getDay(date);
+      day._meta = day._meta || {};
+      day._meta.updated = Date.now();
+    }
+
+    function initDateBar() {
+      const d = parseDate(currentDate);
+      const days = ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'];
+      document.getElementById('date-day').textContent = String(d.getDate()).padStart(2, '0');
+      document.getElementById('date-week').textContent = days[d.getDay()];
+      document.getElementById('date-ym').textContent = `${d.getFullYear()}年${d.getMonth()+1}月`;
+      document.getElementById('date-quote').textContent = quotes[d.getDay() % quotes.length];
+    }
+
+    function updateProgress(type) {
+      const day = getDay(currentDate);
+      const items = day[type] || [];
+      const total = items.length;
+      const done = items.filter(i => i.done).length;
+      const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+      const ring = document.getElementById('ring-' + type);
+      const text = document.getElementById('text-' + type);
+      const circumference = 125.6;
+      ring.style.strokeDashoffset = circumference - (pct / 100) * circumference;
+      text.textContent = pct + '%';
+    }
+
+    function createItemEl(item) {
+      const li = document.createElement('li');
+      li.className = 'item' + (item.done ? ' done' : '');
+      li.draggable = true;
+      li.dataset.id = item.id;
+      li.innerHTML = `
+        <span class="handle">⋮⋮</span>
+        <div class="checkbox"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+        <div class="text" contenteditable="true">${escapeHtml(item.text)}</div>
+        <button class="btn-del" title="删除">×</button>
+      `;
+
+      li.querySelector('.checkbox').onclick = () => toggleDone(item.id);
+      li.querySelector('.btn-del').onclick = () => deleteItem(item.id);
+      const textEl = li.querySelector('.text');
+      textEl.onblur = () => updateText(item.id, textEl.innerText);
+      textEl.onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); textEl.blur(); } };
+
+      li.addEventListener('dragstart', handleDragStart);
+      li.addEventListener('dragend', handleDragEnd);
+      li.addEventListener('dragover', handleDragOver);
+      li.addEventListener('drop', handleDrop);
+      li.addEventListener('dragenter', handleDragEnter);
+      li.addEventListener('dragleave', handleDragLeave);
+
+      return li;
+    }
+
+    function render() {
+      initDateBar();
+      ['work','life'].forEach(type => {
+        const col = document.querySelector(`.column[data-type="${type}"]`);
+        const list = col.querySelector('.list');
+        list.innerHTML = '';
+        const items = getDay(currentDate)[type];
+
+        if (items.length === 0) {
+          list.innerHTML = `
+            <li class="empty">
+              <div class="empty-icon">${type === 'work' ? '📝' : '🍵'}</div>
+              ${type === 'work' ? '暂无工作待办，添加第一个任务' : '暂无生活待办，添加第一件事'}
+            </li>`;
+        } else {
+          items.forEach(item => list.appendChild(createItemEl(item)));
+        }
+
+        updateProgress(type);
+      });
+      updateSyncStatus();
+    }
+
+    function addItem(type, text) {
+      text = text.trim();
+      if (!text) return;
+      const day = getDay(currentDate);
+      day[type].unshift({ id: uid(), text, done: false });
+      touchDay(currentDate);
+      saveAll();
+      render();
+      scheduleSync();
+      showToast('已添加');
+    }
+
+    function findItem(id) {
+      const day = getDay(currentDate);
+      for (const type of ['work', 'life']) {
+        const item = day[type].find(i => i.id === id);
+        if (item) return { item, type, day };
+      }
+      return null;
+    }
+
+    function toggleDone(id) {
+      const found = findItem(id);
+      if (!found) return;
+      found.item.done = !found.item.done;
+      touchDay(currentDate);
+      saveAll();
+      render();
+      scheduleSync();
+    }
+
+    function updateText(id, text) {
+      text = text.trim();
+      if (!text) return;
+      const found = findItem(id);
+      if (!found) return;
+      found.item.text = text;
+      touchDay(currentDate);
+      saveAll();
+      scheduleSync();
+    }
+
+    function deleteItem(id) {
+      const day = getDay(currentDate);
+      for (const type of ['work','life']) {
+        const idx = day[type].findIndex(i => i.id === id);
+        if (idx > -1) {
+          day[type].splice(idx, 1);
+          touchDay(currentDate);
+          saveAll();
+          render();
+          scheduleSync();
+          showToast('已删除');
+          return;
+        }
+      }
+    }
+
+    let draggedId = null;
+
+    function handleDragStart(e) {
+      draggedId = this.dataset.id;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragEnd(e) {
+      this.classList.remove('dragging');
+      document.querySelectorAll('.item.over').forEach(el => el.classList.remove('over'));
+      draggedId = null;
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+
+    function handleDragEnter(e) {
+      if (this.dataset.id !== draggedId) this.classList.add('over');
+    }
+
+    function handleDragLeave(e) {
+      this.classList.remove('over');
+    }
+
+    function handleDrop(e) {
+      e.stopPropagation();
+      this.classList.remove('over');
+      if (!draggedId || draggedId === this.dataset.id) return;
+
+      const type = this.closest('.column').dataset.type;
+      const day = getDay(currentDate);
+      const list = day[type];
+      const fromIdx = list.findIndex(i => i.id === draggedId);
+      const toIdx = list.findIndex(i => i.id === this.dataset.id);
+      if (fromIdx === -1 || toIdx === -1) return;
+
+      const [moved] = list.splice(fromIdx, 1);
+      list.splice(toIdx, 0, moved);
+      touchDay(currentDate);
+      saveAll();
+      render();
+      scheduleSync();
+    }
+
+    document.querySelectorAll('.column').forEach(col => {
+      const type = col.dataset.type;
+      const input = col.querySelector('input');
+      const btn = col.querySelector('.btn-add');
+
+      btn.onclick = () => { addItem(type, input.value); input.value = ''; input.focus(); };
+      input.onkeydown = (e) => { if (e.key === 'Enter') { addItem(type, input.value); input.value = ''; } };
+    });
+
+    document.getElementById('btn-prev').onclick = () => changeDate(-1);
+    document.getElementById('btn-next').onclick = () => changeDate(1);
+    document.getElementById('btn-today').onclick = () => { currentDate = formatDate(new Date()); render(); };
+    document.getElementById('date-day').onclick = openCalendar;
+    document.getElementById('btn-calendar').onclick = openCalendar;
+
+    function changeDate(delta) {
+      const d = parseDate(currentDate);
+      d.setDate(d.getDate() + delta);
+      currentDate = formatDate(d);
+      render();
+    }
+
+    // 导出 / 导入 / 清空
+    document.getElementById('btn-export').onclick = () => {
+      const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `每日待办备份_${currentDate}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      showToast('备份已下载');
+    };
+
+    document.getElementById('btn-import').onclick = () => {
+      document.getElementById('file-input').click();
+    };
+
+    document.getElementById('file-input').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const imported = JSON.parse(ev.target.result);
+          if (typeof imported === 'object' && imported !== null) {
+            allData = imported;
+            saveAll();
+            render();
+            scheduleSync();
+            showToast('备份已恢复');
+          } else {
+            showToast('文件格式不对');
+          }
+        } catch (err) {
+          showToast('无法读取该文件');
+        }
+        e.target.value = '';
+      };
+      reader.readAsText(file);
+    };
+
+    document.getElementById('btn-clear').onclick = () => {
+      if (!confirm(`确定清空 ${currentDate} 的所有待办吗？此操作不可恢复。`)) return;
+      allData[currentDate] = { work: [], life: [], _meta: { updated: Date.now() } };
+      saveAll();
+      render();
+      scheduleSync();
+      showToast('已清空');
+    };
+
+    // 日历弹窗
+    let calView = new Date();
+
+    function openCalendar() {
+      calView = parseDate(currentDate);
+      renderCalendar();
+      document.getElementById('calendar-overlay').classList.add('show');
+    }
+
+    function closeCalendar() {
+      document.getElementById('calendar-overlay').classList.remove('show');
+    }
+
+    function renderCalendar() {
+      const y = calView.getFullYear();
+      const m = calView.getMonth();
+      document.getElementById('cal-month').textContent = `${y}年${m + 1}月`;
+
+      const first = new Date(y, m, 1);
+      const startDay = first.getDay();
+      const daysInMonth = new Date(y, m + 1, 0).getDate();
+      const prevDays = new Date(y, m, 0).getDate();
+
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+
+      const weekdays = ['日','一','二','三','四','五','六'];
+      weekdays.forEach(w => {
+        const el = document.createElement('div');
+        el.className = 'cal-weekday';
+        el.textContent = w;
+        grid.appendChild(el);
+      });
+
+      const today = formatDate(new Date());
+
+      for (let i = startDay - 1; i >= 0; i--) {
+        const btn = document.createElement('button');
+        btn.className = 'cal-day other';
+        btn.textContent = prevDays - i;
+        grid.appendChild(btn);
+      }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dateStr = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const btn = document.createElement('button');
+        btn.className = 'cal-day';
+        btn.textContent = d;
+        if (dateStr === today) btn.classList.add('today');
+        if (dateStr === currentDate) btn.classList.add('selected');
+        if (allData[dateStr] && (allData[dateStr].work.length || allData[dateStr].life.length)) {
+          btn.classList.add('has-data');
+        }
+        btn.onclick = () => {
+          currentDate = dateStr;
+          render();
+          closeCalendar();
+        };
+        grid.appendChild(btn);
+      }
+
+      const remaining = (7 - ((startDay + daysInMonth) % 7)) % 7;
+      for (let d = 1; d <= remaining; d++) {
+        const btn = document.createElement('button');
+        btn.className = 'cal-day other';
+        btn.textContent = d;
+        grid.appendChild(btn);
+      }
+    }
+
+    document.getElementById('cal-prev').onclick = () => { calView.setMonth(calView.getMonth() - 1); renderCalendar(); };
+    document.getElementById('cal-next').onclick = () => { calView.setMonth(calView.getMonth() + 1); renderCalendar(); };
+    document.querySelector('[data-close="calendar"]').onclick = closeCalendar;
+    document.getElementById('calendar-overlay').onclick = (e) => { if (e.target.id === 'calendar-overlay') closeCalendar(); };
+
+    // 设置弹窗
+    document.getElementById('btn-settings').onclick = openSettings;
+    document.querySelector('[data-close="settings"]').onclick = closeSettings;
+    document.getElementById('settings-overlay').onclick = (e) => { if (e.target.id === 'settings-overlay') closeSettings(); };
+    document.getElementById('btn-save-settings').onclick = saveSettings;
+    document.getElementById('btn-test').onclick = testConnection;
+
+    function openSettings() {
+      document.getElementById('set-pat').value = settings.pat || '';
+      document.getElementById('set-owner').value = settings.owner || '';
+      document.getElementById('set-repo').value = settings.repo || '';
+      document.getElementById('set-path').value = settings.path || 'todo-data.json';
+      document.getElementById('set-branch').value = settings.branch || 'main';
+      document.getElementById('settings-overlay').classList.add('show');
+    }
+
+    function closeSettings() {
+      document.getElementById('settings-overlay').classList.remove('show');
+    }
+
+    function saveSettings() {
+      settings.pat = document.getElementById('set-pat').value.trim();
+      settings.owner = document.getElementById('set-owner').value.trim();
+      settings.repo = document.getElementById('set-repo').value.trim();
+      settings.path = document.getElementById('set-path').value.trim() || 'todo-data.json';
+      settings.branch = document.getElementById('set-branch').value.trim() || 'main';
+      saveAll();
+      updateSyncStatus();
+      closeSettings();
+      showToast('设置已保存');
+      scheduleSync();
+    }
+
+    function updateSyncStatus() {
+      const dot = document.getElementById('sync-dot');
+      const text = document.getElementById('sync-text');
+      dot.className = 'sync-dot';
+      if (!settings.pat || !settings.owner || !settings.repo) {
+        text.textContent = '本地模式（未配置 GitHub）';
+        return;
+      }
+      if (syncMeta.status === 'syncing') {
+        dot.classList.add('syncing');
+        text.textContent = '正在同步…';
+      } else if (syncMeta.status === 'ok') {
+        dot.classList.add('ok');
+        const t = syncMeta.lastSync ? new Date(syncMeta.lastSync).toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'}) : '';
+        text.textContent = `已连接 GitHub${t ? ' · 上次同步 ' + t : ''}`;
+      } else if (syncMeta.status === 'err') {
+        dot.classList.add('err');
+        text.textContent = '同步失败：' + (syncMeta.message || '请检查 Token 与仓库');
+      } else {
+        text.textContent = `已配置 ${settings.repo}`;
+      }
+    }
+
+    // GitHub API
+    function utf8_to_b64(str) {
+      return btoa(unescape(encodeURIComponent(str)));
+    }
+
+    function b64_to_utf8(str) {
+      return decodeURIComponent(escape(atob(str.replace(/\n/g, ''))));
+    }
+
+    function githubHeaders() {
+      return {
+        'Authorization': 'token ' + settings.pat,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      };
+    }
+
+    async function apiGetFile() {
+      const url = `https://api.github.com/repos/${settings.owner}/${settings.repo}/contents/${encodeURIComponent(settings.path)}?ref=${encodeURIComponent(settings.branch)}`;
+      const res = await fetch(url, { headers: githubHeaders() });
+      if (res.status === 404) return null;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      return await res.json();
+    }
+
+    async function apiPutFile(contentObj, sha) {
+      const url = `https://api.github.com/repos/${settings.owner}/${settings.repo}/contents/${encodeURIComponent(settings.path)}`;
+      const body = {
+        message: 'Sync daily todo data',
+        content: utf8_to_b64(JSON.stringify(contentObj, null, 2)),
+        branch: settings.branch
+      };
+      if (sha) body.sha = sha;
+      const res = await fetch(url, {
+        method: 'PUT',
+        headers: githubHeaders(),
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || `HTTP ${res.status}`);
+      }
+      return await res.json();
+    }
+
+    function mergeRemote(remoteData) {
+      for (const date of Object.keys(remoteData)) {
+        if (date.startsWith('_')) continue;
+        const remoteDay = remoteData[date];
+        if (!remoteDay || typeof remoteDay !== 'object') continue;
+        const localDay = allData[date];
+        const remoteUpdated = (remoteDay._meta && remoteDay._meta.updated) || 0;
+        const localUpdated = (localDay && localDay._meta && localDay._meta.updated) || 0;
+        if (!localDay || remoteUpdated > localUpdated) {
+          allData[date] = remoteDay;
+        }
+      }
+    }
+
+    async function syncFromGitHub() {
+      if (!settings.pat || !settings.owner || !settings.repo) {
+        showToast('请先配置 GitHub 同步');
+        return;
+      }
+      setSyncStatus('syncing');
+      try {
+        const file = await apiGetFile();
+        if (!file) {
+          setSyncStatus('ok', '远程暂无数据文件');
+          showToast('远程暂无数据，可点击立即同步上传');
+          return;
+        }
+        const remote = JSON.parse(b64_to_utf8(file.content));
+        mergeRemote(remote);
+        saveAll();
+        render();
+        setSyncStatus('ok', '已从 GitHub 拉取');
+        showToast('已拉取远程数据');
+      } catch (e) {
+        setSyncStatus('err', e.message);
+        showToast('拉取失败：' + e.message);
+      }
+    }
+
+    async function syncToGitHub() {
+      if (!settings.pat || !settings.owner || !settings.repo) {
+        showToast('请先配置 GitHub 同步');
+        return;
+      }
+      setSyncStatus('syncing');
+      try {
+        const file = await apiGetFile();
+        const sha = file ? file.sha : undefined;
+        await apiPutFile(allData, sha);
+        syncMeta.lastSync = Date.now();
+        setSyncStatus('ok', '已同步到 GitHub');
+        showToast('已同步到 GitHub');
+      } catch (e) {
+        setSyncStatus('err', e.message);
+        showToast('同步失败：' + e.message);
+      }
+    }
+
+    function setSyncStatus(status, message) {
+      syncMeta.status = status;
+      if (message) syncMeta.message = message;
+      saveAll();
+      updateSyncStatus();
+    }
+
+    async function testConnection() {
+      const tmp = {
+        pat: document.getElementById('set-pat').value.trim(),
+        owner: document.getElementById('set-owner').value.trim(),
+        repo: document.getElementById('set-repo').value.trim(),
+        path: document.getElementById('set-path').value.trim() || 'todo-data.json',
+        branch: document.getElementById('set-branch').value.trim() || 'main'
+      };
+      if (!tmp.pat || !tmp.owner || !tmp.repo) {
+        showToast('请填写 Token、所有者、仓库名');
+        return;
+      }
+      showToast('正在测试连接…');
+      try {
+        const url = `https://api.github.com/repos/${tmp.owner}/${tmp.repo}`;
+        const res = await fetch(url, { headers: { 'Authorization': 'token ' + tmp.pat, 'Accept': 'application/vnd.github+json' } });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || `HTTP ${res.status}`);
+        }
+        showToast('连接成功 ✓');
+      } catch (e) {
+        showToast('连接失败：' + e.message);
+      }
+    }
+
+    function scheduleSync() {
+      if (!settings.pat || !settings.owner || !settings.repo) return;
+      if (syncTimer) clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        syncToGitHub();
+      }, 3000);
+    }
+
+    document.getElementById('btn-sync').onclick = syncToGitHub;
+
+    // 双击「立即同步」拉取：按住 Alt 点击为拉取
+    document.getElementById('btn-sync').addEventListener('click', (e) => {
+      if (e.altKey) {
+        e.preventDefault();
+        syncFromGitHub();
+      }
+    });
+
+    // 初始化
+    loadAll();
+    render();
+
+    // 如果本地没有数据且已配置 GitHub，尝试拉取一次
+    (async () => {
+      if (settings.pat && settings.owner && settings.repo && Object.keys(allData).length === 0) {
+        await syncFromGitHub();
+      }
+    })();
+  </script>
+</body>
+</html>
