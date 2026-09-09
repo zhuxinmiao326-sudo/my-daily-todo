@@ -6,20 +6,20 @@
   <title>每日待办 · 日历同步版</title>
   <style>
     :root {
-      --work: #818cf8;
+      --work: #0ea5e9;
       --work-2: #38bdf8;
       --life: #f472b6;
-      --life-2: #fb923c;
-      --bg: #0f0d23;
-      --card: rgba(255, 255, 255, 0.08);
-      --text: #f8fafc;
-      --text-2: #cbd5e1;
-      --border: rgba(255, 255, 255, 0.12);
+      --life-2: #fbbf24;
+      --bg: #fffaf0;
+      --card: #ffffff;
+      --text: #334155;
+      --text-2: #64748b;
+      --border: rgba(0, 0, 0, 0.06);
       --radius-xl: 28px;
       --radius-lg: 18px;
       --radius-md: 12px;
-      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
-      --shadow-hover: 0 30px 70px rgba(0, 0, 0, 0.45);
+      --shadow: 8px 8px 0 rgba(0,0,0,0.06);
+      --shadow-hover: 12px 12px 0 rgba(0,0,0,0.08);
     }
 
     * { box-sizing: border-box; }
@@ -28,7 +28,7 @@
       margin: 0;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: #0f0d23;
+      background: #fffaf0;
       color: var(--text);
       -webkit-font-smoothing: antialiased;
     }
@@ -73,25 +73,23 @@
     .icon-btn {
       width: 36px;
       height: 36px;
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
+      background: #fff;
       color: var(--text-2);
       cursor: pointer;
       font-size: 18px;
       display: grid;
       place-items: center;
       transition: all 0.15s;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
     }
 
     .icon-btn:hover {
-      border-color: rgba(255,255,255,0.25);
-      color: #fff;
-      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(0,0,0,0.12);
+      color: var(--text);
+      background: #fff;
       transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(99,102,241,0.25);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     }
 
     .date-day {
@@ -99,10 +97,7 @@
       font-weight: 800;
       line-height: 0.85;
       letter-spacing: -3px;
-      background: linear-gradient(135deg, #6366f1, #f472b6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      color: #334155;
       cursor: pointer;
     }
 
@@ -126,15 +121,14 @@
 
     .date-quote {
       font-size: 14px;
-      color: #e2e8f0;
-      background: rgba(255,255,255,0.08);
+      color: #64748b;
+      background: #fff;
       padding: 10px 18px;
       border-radius: 999px;
       border: 1px solid var(--border);
       max-width: 320px;
       text-align: right;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
 
     /* 双栏 */
@@ -153,36 +147,38 @@
 
     .column {
       background: var(--card);
-      border-radius: var(--radius-xl);
+      border-radius: 24px;
       padding: 28px;
       box-shadow: var(--shadow);
       display: flex;
       flex-direction: column;
       min-height: 520px;
-      transition: box-shadow 0.3s, transform 0.3s, border-color 0.3s;
+      transition: box-shadow 0.3s, transform 0.3s;
       position: relative;
       overflow: hidden;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.12);
+      border: 2px solid rgba(0,0,0,0.04);
     }
+    .column.work { transform: rotate(-0.6deg); background: #e0f2fe; }
+    .column.life { transform: rotate(0.6deg); background: #fce7f3; }
 
     .column::before {
       content: "";
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 5px;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 22px;
+      background: rgba(255,255,255,0.55);
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
 
-    .column.work::before { background: linear-gradient(90deg, var(--work), var(--work-2)); }
-    .column.life::before { background: linear-gradient(90deg, var(--life), var(--life-2)); }
+    
 
-    .column:hover {
+    .column.work:hover, .column.life:hover {
       box-shadow: var(--shadow-hover);
-      transform: translateY(-2px);
-      border-color: rgba(255,255,255,0.22);
+      transform: rotate(0deg) translateY(-2px);
     }
 
     .col-header {
@@ -207,8 +203,8 @@
       font-size: 24px;
     }
 
-    .work .col-icon { background: linear-gradient(135deg, #eef2ff, #e0f2fe); }
-    .life .col-icon { background: linear-gradient(135deg, #fdf2f8, #fff7ed); }
+    .work .col-icon { background: #fff; box-shadow: 0 2px 6px rgba(14,165,233,0.12); }
+    .life .col-icon { background: #fff; box-shadow: 0 2px 6px rgba(244,114,182,0.12); }
 
     .col-title {
       font-size: 22px;
@@ -266,22 +262,23 @@
       font-size: 15px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
-      background: rgba(255,255,255,0.06);
+      background: #fff;
       color: var(--text);
     }
 
     .input-row input::placeholder { color: #94a3b8; }
+    .input-row input { background: #fff; }
 
     .work .input-row input:focus {
       border-color: var(--work);
-      box-shadow: 0 0 0 4px rgba(99,102,241,0.25);
-      background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 0 4px rgba(14,165,233,0.12);
+      background: #fff;
     }
 
     .life .input-row input:focus {
       border-color: var(--life);
-      box-shadow: 0 0 0 4px rgba(244,114,182,0.25);
-      background: rgba(255,255,255,0.1);
+      box-shadow: 0 0 0 4px rgba(244,114,182,0.12);
+      background: #fff;
     }
 
     .btn-add {
@@ -297,8 +294,8 @@
     }
 
     .btn-add:active { transform: scale(0.96); }
-    .work .btn-add { background: linear-gradient(135deg, var(--work), var(--work-2)); }
-    .life .btn-add { background: linear-gradient(135deg, var(--life), var(--life-2)); }
+    .work .btn-add { background: #0ea5e9; }
+    .life .btn-add { background: #f472b6; }
 
     .list {
       list-style: none;
@@ -311,7 +308,7 @@
       display: flex;
       align-items: center;
       gap: 12px;
-      background: rgba(255,255,255,0.06);
+      background: #fff;
       border: 1.5px solid var(--border);
       border-radius: var(--radius-md);
       padding: 14px 14px 14px 16px;
@@ -322,19 +319,20 @@
 
     .item:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.25);
-      border-color: rgba(255,255,255,0.22);
-      background: rgba(255,255,255,0.12);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+      border-color: rgba(0,0,0,0.1);
+      background: #fff;
     }
 
     .item.dragging {
-      opacity: 0.4;
+      opacity: 0.5;
       border-style: dashed;
+      background: #fff;
     }
 
     .item.over {
-      border-color: #a78bfa;
-      background: rgba(167,139,250,0.12);
+      border-color: #fbbf24;
+      background: #fffbeb;
     }
 
     .handle {
@@ -349,22 +347,23 @@
     .checkbox {
       width: 24px;
       height: 24px;
-      border: 2px solid rgba(255,255,255,0.25);
+      border: 2px solid rgba(0,0,0,0.12);
       border-radius: 50%;
       display: grid;
       place-items: center;
       cursor: pointer;
       flex-shrink: 0;
       transition: background 0.2s, border-color 0.2s;
+      background: #fff;
     }
 
     .work .item.done .checkbox {
-      background: linear-gradient(135deg, var(--work), var(--work-2));
+      background: #0ea5e9;
       border-color: transparent;
     }
 
     .life .item.done .checkbox {
-      background: linear-gradient(135deg, var(--life), var(--life-2));
+      background: #f472b6;
       border-color: transparent;
     }
 
@@ -435,8 +434,8 @@
       font-size: 28px;
     }
 
-    .work .empty-icon { background: linear-gradient(135deg, rgba(99,102,241,0.25), rgba(56,189,248,0.25)); }
-    .life .empty-icon { background: linear-gradient(135deg, rgba(244,114,182,0.25), rgba(251,146,60,0.25)); }
+    .work .empty-icon { background: #e0f2fe; }
+    .life .empty-icon { background: #fce7f3; }
 
     footer {
       margin-top: 34px;
@@ -455,51 +454,49 @@
     }
 
     .footer-btn {
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: 999px;
       padding: 10px 20px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      color: #e2e8f0;
-      background: rgba(255,255,255,0.08);
+      color: #64748b;
+      background: #fff;
       transition: transform 0.15s, box-shadow 0.15s, color 0.15s, background 0.15s;
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
     }
 
     .footer-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(99,102,241,0.2);
-      color: #fff;
-      background: rgba(255,255,255,0.16);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+      color: var(--text);
+      background: #fff;
     }
 
     .footer-btn.primary {
       color: #fff;
       border-color: transparent;
-      background: linear-gradient(135deg, #6366f1, #f472b6);
+      background: #f472b6;
     }
 
     .notice {
       font-size: 12px;
       color: #94a3b8;
-      background: rgba(255,255,255,0.06);
+      background: #fff;
       padding: 6px 14px;
       border-radius: 999px;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
+      border: 1px solid var(--border);
     }
 
     .sync-status {
       font-size: 12px;
-      color: #e2e8f0;
+      color: #64748b;
       display: flex;
       align-items: center;
       gap: 6px;
-      background: rgba(255,255,255,0.06);
+      background: #fff;
       padding: 4px 12px;
       border-radius: 999px;
+      border: 1px solid var(--border);
     }
 
     .sync-dot {
@@ -523,7 +520,7 @@
       bottom: 28px;
       left: 50%;
       transform: translateX(-50%) translateY(80px);
-      background: #1e293b;
+      background: #334155;
       color: #fff;
       padding: 12px 24px;
       border-radius: 999px;
@@ -551,7 +548,7 @@
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(15, 23, 42, 0.45);
+      background: rgba(255,255,255,0.7);
       backdrop-filter: blur(4px);
       -webkit-backdrop-filter: blur(4px);
       display: none;
@@ -569,7 +566,7 @@
     }
 
     .modal {
-      background: rgba(30, 27, 75, 0.85);
+      background: #fff;
       border-radius: var(--radius-xl);
       padding: 24px;
       width: 100%;
@@ -579,9 +576,7 @@
       box-shadow: var(--shadow-hover);
       transform: translateY(10px);
       transition: transform 0.2s;
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
-      border: 1px solid rgba(255,255,255,0.15);
+      border: 2px solid rgba(0,0,0,0.04);
     }
 
     .modal-overlay.show .modal { transform: translateY(0); }
@@ -603,7 +598,7 @@
       width: 32px;
       height: 32px;
       border: none;
-      background: #f1f5f9;
+      background: #f8fafc;
       border-radius: 50%;
       cursor: pointer;
       font-size: 18px;
@@ -645,7 +640,7 @@
       aspect-ratio: 1;
       border: none;
       border-radius: var(--radius-md);
-      background: rgba(255, 255, 255, 0.08);
+      background: #f8fafc;
       color: var(--text);
       font-size: 14px;
       cursor: pointer;
@@ -655,17 +650,17 @@
       transition: all 0.15s;
     }
 
-    .cal-day:hover { background: rgba(99,102,241,0.25); }
+    .cal-day:hover { background: #e0f2fe; }
 
     .cal-day.other { color: #64748b; background: transparent; }
 
     .cal-day.today {
       font-weight: 800;
-      box-shadow: inset 0 0 0 2px #6366f1;
+      box-shadow: inset 0 0 0 2px #0ea5e9;
     }
 
     .cal-day.selected {
-      background: linear-gradient(135deg, #6366f1, #f472b6);
+      background: #0ea5e9;
       color: #fff;
       font-weight: 700;
     }
@@ -703,14 +698,14 @@
       font-size: 14px;
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
-      background: rgba(255,255,255,0.06);
+      background: #fff;
       color: var(--text);
     }
 
     .form-group input:focus {
-      border-color: #6366f1;
-      box-shadow: 0 0 0 4px rgba(99,102,241,0.25);
-      background: rgba(255,255,255,0.1);
+      border-color: #0ea5e9;
+      box-shadow: 0 0 0 4px rgba(14,165,233,0.12);
+      background: #fff;
     }
 
     .form-hint {
@@ -735,12 +730,12 @@
   <svg width="0" height="0" style="position:absolute;">
     <defs>
       <linearGradient id="grad-work" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stop-color="#6366f1" />
+        <stop offset="0%" stop-color="#0ea5e9" />
         <stop offset="100%" stop-color="#38bdf8" />
       </linearGradient>
       <linearGradient id="grad-life" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#f472b6" />
-        <stop offset="100%" stop-color="#fb923c" />
+        <stop offset="100%" stop-color="#fbbf24" />
       </linearGradient>
     </defs>
   </svg>
@@ -1519,40 +1514,23 @@
       }
     });
 
-    // ========== Galaxy 星空背景 ==========
+    // ========== 彩色纸屑星星背景 ==========
     class GalaxyBG {
       constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
-        this.mouse = { x: -1000, y: -1000 };
-        this.angle = 0;
 
-        // 与 React Bits Galaxy 参数对应
-        this.starSpeed = 0.5;
-        this.density = 2.2;
-        this.hueShift = 140;
-        this.speed = 1;
-        this.glowIntensity = 0.55;
-        this.saturation = 0;
-        this.mouseRepulsion = true;
-        this.repulsionStrength = 2;
-        this.twinkleIntensity = 0.4;
-        this.rotationSpeed = 0.1;
-        this.transparent = true;
+        // 多巴胺 pastel 彩色小点
+        this.palette = [
+          '#f472b6', '#fb923c', '#fbbf24', '#a3e635',
+          '#34d399', '#22d3ee', '#60a5fa', '#a78bfa', '#f87171'
+        ];
+        this.density = 1.6;
+        this.speed = 0.4;
 
         this.resize();
         this.initStars();
-
         window.addEventListener('resize', () => this.resize());
-        window.addEventListener('mousemove', (e) => {
-          this.mouse.x = e.clientX;
-          this.mouse.y = e.clientY;
-        });
-        window.addEventListener('mouseleave', () => {
-          this.mouse.x = -1000;
-          this.mouse.y = -1000;
-        });
-
         this.animate();
       }
 
@@ -1566,19 +1544,19 @@
 
       initStars() {
         const area = this.width * this.height;
-        const count = Math.max(80, Math.floor(area / 3800 * this.density));
-        const palette = [200, 220, 240, 260, 270, 290]; // 偏冷的蓝紫、靛蓝
+        const count = Math.max(60, Math.floor(area / 5000 * this.density));
         this.stars = [];
         for (let i = 0; i < count; i++) {
           this.stars.push({
             x: Math.random() * this.width,
             y: Math.random() * this.height,
-            size: Math.random() * 1.8 + 0.6,
-            speed: Math.random() * 0.3 + 0.1,
-            twinkle: Math.random() * Math.PI * 2,
-            twinkleSpeed: Math.random() * 0.018 + 0.006,
-            hue: palette[Math.floor(Math.random() * palette.length)] + Math.random() * 20 - 10,
-            brightness: Math.random() * 0.35 + 0.75
+            size: Math.random() * 3 + 1.5,
+            color: this.palette[Math.floor(Math.random() * this.palette.length)],
+            vx: (Math.random() - 0.5) * 0.25,
+            vy: (Math.random() - 0.5) * 0.25,
+            alpha: Math.random() * 0.35 + 0.35,
+            pulse: Math.random() * Math.PI * 2,
+            pulseSpeed: Math.random() * 0.02 + 0.01
           });
         }
       }
@@ -1587,62 +1565,24 @@
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
 
-        // 绘制深空背景渐变
-        const bgGradient = ctx.createRadialGradient(this.width * 0.35, this.height * 0.25, 0, this.width * 0.5, this.height * 0.5, this.width * 1.05);
-        bgGradient.addColorStop(0, '#1e1b4b');
-        bgGradient.addColorStop(0.5, '#0f0d2e');
-        bgGradient.addColorStop(1, '#020617');
-        ctx.fillStyle = bgGradient;
-        ctx.fillRect(0, 0, this.width, this.height);
-
-        this.angle += this.rotationSpeed * 0.003 * this.speed;
-
-        const cx = this.width / 2;
-        const cy = this.height / 2;
-
         this.stars.forEach(star => {
-          // 基础位置加上缓慢漂移
-          star.x += (Math.random() - 0.5) * this.starSpeed * 0.1 * this.speed;
-          star.y += (Math.random() - 0.5) * this.starSpeed * 0.1 * this.speed;
+          star.x += star.vx * this.speed;
+          star.y += star.vy * this.speed;
+          star.pulse += star.pulseSpeed;
 
-          // 以屏幕中心为原点的旋转
-          const dx = star.x - cx;
-          const dy = star.y - cy;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          const baseAngle = Math.atan2(dy, dx) + this.angle * (1 + dist / 1200);
+          // 边界环绕
+          if (star.x < -20) star.x = this.width + 20;
+          if (star.x > this.width + 20) star.x = -20;
+          if (star.y < -20) star.y = this.height + 20;
+          if (star.y > this.height + 20) star.y = -20;
 
-          let x = cx + Math.cos(baseAngle) * dist;
-          let y = cy + Math.sin(baseAngle) * dist;
-
-          // 鼠标排斥
-          if (this.mouseRepulsion) {
-            const mdx = x - this.mouse.x;
-            const mdy = y - this.mouse.y;
-            const mdist = Math.sqrt(mdx * mdx + mdy * mdy);
-            const repelRadius = 160;
-            if (mdist < repelRadius && mdist > 0) {
-              const force = (repelRadius - mdist) / repelRadius * this.repulsionStrength * 35;
-              x += (mdx / mdist) * force;
-              y += (mdy / mdist) * force;
-            }
-          }
-
-          // 闪烁
-          star.twinkle += star.twinkleSpeed * this.speed;
-          const twinkle = Math.sin(star.twinkle) * this.twinkleIntensity + (1 - this.twinkleIntensity);
-          const alpha = Math.max(0.25, star.brightness * twinkle);
-
-          // 多巴胺配色：高饱和彩色光点
-          const sat = this.saturation > 0 ? this.saturation * 100 : 80;
-          const color = `hsla(${star.hue}, ${sat}%, 72%, ${alpha})`;
+          const alpha = star.alpha * (0.85 + Math.sin(star.pulse) * 0.15);
 
           ctx.save();
           ctx.globalAlpha = alpha;
-          ctx.fillStyle = color;
-          ctx.shadowBlur = star.size * 14 * this.glowIntensity;
-          ctx.shadowColor = `hsla(${star.hue}, ${sat}%, 70%, ${alpha * 0.8})`;
+          ctx.fillStyle = star.color;
           ctx.beginPath();
-          ctx.arc(x, y, star.size, 0, Math.PI * 2);
+          ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         });
