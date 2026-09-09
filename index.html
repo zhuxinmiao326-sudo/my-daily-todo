@@ -28,9 +28,7 @@
       margin: 0;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: radial-gradient(ellipse at 20% 20%, #1e1b4b 0%, transparent 50%),
-                  radial-gradient(ellipse at 80% 80%, #312e81 0%, transparent 50%),
-                  linear-gradient(135deg, #0b1026 0%, #1a103c 50%, #0f172a 100%);
+      background: #0b1026;
       color: var(--text);
       -webkit-font-smoothing: antialiased;
     }
@@ -40,8 +38,13 @@
       inset: 0;
       width: 100%;
       height: 100%;
-      z-index: -1;
+      z-index: 0;
       pointer-events: none;
+    }
+
+    .wrap, footer, .toast {
+      position: relative;
+      z-index: 1;
     }
 
     body { padding: 40px 24px; }
@@ -1583,6 +1586,14 @@
       animate() {
         const ctx = this.ctx;
         ctx.clearRect(0, 0, this.width, this.height);
+
+        // 绘制深空背景渐变
+        const bgGradient = ctx.createRadialGradient(this.width * 0.3, this.height * 0.3, 0, this.width * 0.5, this.height * 0.5, this.width * 0.9);
+        bgGradient.addColorStop(0, '#1e1b4b');
+        bgGradient.addColorStop(0.5, '#0b1026');
+        bgGradient.addColorStop(1, '#0f172a');
+        ctx.fillStyle = bgGradient;
+        ctx.fillRect(0, 0, this.width, this.height);
 
         this.angle += this.rotationSpeed * 0.003 * this.speed;
 
