@@ -1443,7 +1443,11 @@
         const localDay = allData[date];
         const remoteUpdated = (remoteDay._meta && remoteDay._meta.updated) || 0;
         const localUpdated = (localDay && localDay._meta && localDay._meta.updated) || 0;
-        if (!localDay || remoteUpdated > localUpdated) {
+        const localEmpty = !localDay || ((!localDay.work || !localDay.work.length) && (!localDay.life || !localDay.life.length));
+        const remoteEmpty = (!remoteDay.work || !remoteDay.work.length) && (!remoteDay.life || !remoteDay.life.length);
+        // 本地为空（含页面打开时自动创建的空记录）而远程有内容时，直接采用远程；
+        // 否则按"最后更新者优先"合并
+        if (!localDay || (localEmpty && !remoteEmpty) || (localDay && remoteUpdated > localUpdated)) {
           allData[date] = remoteDay;
         }
       }
