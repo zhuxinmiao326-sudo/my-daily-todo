@@ -497,6 +497,12 @@
       padding: 4px 12px;
       border-radius: 999px;
       border: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .sync-status:hover {
+      border-color: #cbd5e1;
     }
 
     .sync-dot {
@@ -1388,6 +1394,27 @@
       return await res.json();
     }
 
+    // 读取远程数据：优先走 GitHub Pages 静态文件（手机网络更稳），失败再回退 GitHub API
+    async function fetchRemoteData() {
+      try {
+        const url = `https://${settings.owner}.github.io/${settings.repo}/${settings.path}?t=${Date.now()}`;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (res.ok) {
+          const text = await res.text();
+          try {
+            return JSON.parse(text);
+          } catch (e) {
+            // 返回的不是 JSON（如 404 页面），继续走 API
+          }
+        }
+      } catch (e) {
+        // 网络不可达等情况，继续走 API
+      }
+      const file = await apiGetFile();
+      if (!file) return null;
+      return JSON.parse(b64_to_utf8(file.content));
+    }
+
     async function apiPutFile(contentObj, sha) {
       const url = `https://api.github.com/repos/${settings.owner}/${settings.repo}/contents/${encodeURIComponent(settings.path)}`;
       const body = {
@@ -1429,13 +1456,12 @@
       }
       setSyncStatus('syncing');
       try {
-        const file = await apiGetFile();
-        if (!file) {
+        const remote = await fetchRemoteData();
+        if (!remote) {
           setSyncStatus('ok', '远程暂无数据文件');
           showToast('远程暂无数据，可点击立即同步上传');
           return;
         }
-        const remote = JSON.parse(b64_to_utf8(file.content));
         mergeRemote(remote);
         saveAll();
         render();
@@ -1625,12 +1651,13 @@
     const galaxyCanvas = document.getElementById('galaxy-bg');
     if (galaxyCanvas) new GalaxyBG(galaxyCanvas);
 
-    // 如果本地没有数据，自动从 GitHub 拉取一次（公共仓库无需 Token）
+    // 启动自动从 GitHub 拉取一次（公共仓库无需 Token；合并只覆盖远程更新的日期，安全）
     (async () => {
-      if (settings.owner && settings.repo && Object.keys(allData).length === 0) {
-        await syncFromGitHub();
-      }
+      if (settings.owner && settings.repo) await syncFromGitHub();
     })();
+
+    // 点顶部的同步状态胶囊，手动拉取最新数据
+    document.getElementById('sync-status').addEventListener('click', () => syncFromGitHub());
   </script>
 </body>
 </html>
