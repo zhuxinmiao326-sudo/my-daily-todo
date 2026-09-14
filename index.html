@@ -889,7 +889,7 @@
 
     let allData = {};
     let currentDate = formatDate(new Date());
-    let settings = { pat: '', owner: '', repo: '', path: 'todo-data.json', branch: 'main' };
+    let settings = { pat: '', owner: 'zhuxinmiao326-sudo', repo: 'my-daily-todo', path: 'todo-data.json', branch: 'main' };
     let syncMeta = { lastSync: 0, status: 'idle', message: '' };
     let syncTimer = null;
 
@@ -1338,7 +1338,7 @@
       const dot = document.getElementById('sync-dot');
       const text = document.getElementById('sync-text');
       dot.className = 'sync-dot';
-      if (!settings.pat || !settings.owner || !settings.repo) {
+      if (!settings.owner || !settings.repo) {
         text.textContent = '本地模式（未配置 GitHub）';
         return;
       }
@@ -1352,6 +1352,8 @@
       } else if (syncMeta.status === 'err') {
         dot.classList.add('err');
         text.textContent = '同步失败：' + (syncMeta.message || '请检查 Token 与仓库');
+      } else if (!settings.pat) {
+        text.textContent = '只读模式（配置 Token 可同步）';
       } else {
         text.textContent = `已配置 ${settings.repo}`;
       }
@@ -1367,11 +1369,12 @@
     }
 
     function githubHeaders() {
-      return {
-        'Authorization': 'token ' + settings.pat,
+      const headers = {
         'Accept': 'application/vnd.github+json',
         'Content-Type': 'application/json'
       };
+      if (settings.pat) headers['Authorization'] = 'token ' + settings.pat;
+      return headers;
     }
 
     async function apiGetFile() {
@@ -1420,8 +1423,8 @@
     }
 
     async function syncFromGitHub() {
-      if (!settings.pat || !settings.owner || !settings.repo) {
-        showToast('请先配置 GitHub 同步');
+      if (!settings.owner || !settings.repo) {
+        showToast('请先配置 GitHub 仓库');
         return;
       }
       setSyncStatus('syncing');
@@ -1446,7 +1449,7 @@
 
     async function syncToGitHub() {
       if (!settings.pat || !settings.owner || !settings.repo) {
-        showToast('请先配置 GitHub 同步');
+        showToast('写入需要 Token，请在设置中配置');
         return;
       }
       setSyncStatus('syncing');
@@ -1622,9 +1625,9 @@
     const galaxyCanvas = document.getElementById('galaxy-bg');
     if (galaxyCanvas) new GalaxyBG(galaxyCanvas);
 
-    // 如果本地没有数据且已配置 GitHub，尝试拉取一次
+    // 如果本地没有数据，自动从 GitHub 拉取一次（公共仓库无需 Token）
     (async () => {
-      if (settings.pat && settings.owner && settings.repo && Object.keys(allData).length === 0) {
+      if (settings.owner && settings.repo && Object.keys(allData).length === 0) {
         await syncFromGitHub();
       }
     })();
